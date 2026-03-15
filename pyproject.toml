@@ -1,0 +1,7 @@
+[project]
+name = "soft-anal-dev-productivity"
+version = "0.1.0"
+description = "Data processing for Software Analytics project about the effect using AI on developer productivity"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []

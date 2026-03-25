@@ -15,6 +15,3 @@ clean_data:
 
 analysis:
 	uv run python -m scripts.3_analysis
-
-analysis_bins:
-	uv run python -m scripts.3_analysis_bins

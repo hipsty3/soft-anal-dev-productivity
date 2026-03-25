@@ -40,8 +40,8 @@ df["log_total_changes"] = np.log1p(df["total_changes"])
 # AI usage categories
 df["ai_group"] = pd.cut(
     df["ai_usage"],
-    bins=[0, 0.01, 0.50, 1],
-    labels=["none", "medium", "high",],
+    bins=[-0.001, 0, 0.2, 1],
+    labels=["none", "low", "high"],
     include_lowest=True  # <- include 0 in first bin
 )
 
@@ -76,10 +76,3 @@ analysis_df.to_csv("processed/3_analysis_ready_data.csv", index=False)
 print("----------------------------------------")
 print("Analysis final rows:", len(analysis_df))
 print(analysis_df.describe())
-
-# Save data for bins
-bins_df = df[["commit_author", "year", "month", "language", "ai_group", "commits", "total_changes", "log_commits", "log_total_changes"]]
-bins_df.to_csv("processed/3.1_analysis_bins_data.csv", index=False)
-print("----------------------------------------")
-print("Bins final rows:", len(bins_df))
-print(bins_df.describe())   

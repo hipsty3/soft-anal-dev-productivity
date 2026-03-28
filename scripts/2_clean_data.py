@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 
+print("Step 2: Cleaning and preparing data for analysis...")
+
 df = pd.read_csv("processed/1_aggregated_data.csv")
 
 # Ensure numeric columns first

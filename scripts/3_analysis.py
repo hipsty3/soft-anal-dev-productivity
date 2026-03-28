@@ -5,6 +5,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
+print("Step 3: Analyzing data and generating plots...")
+
 # -------------------------------
 # Setup
 # -------------------------------

@@ -2,6 +2,8 @@ import sqlite3
 import os
 import pandas as pd
 
+print("Step 1: Aggregating data from SQLite database...")
+
 conn = sqlite3.connect("dataset/ai_commit_research_8.db")
 
 query = """

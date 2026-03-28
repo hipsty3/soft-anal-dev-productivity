@@ -205,3 +205,8 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Data cleaning files that can be regenerated
+dataset/
+processed/
+plots/

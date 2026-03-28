@@ -31,12 +31,6 @@ for col in numeric_columns:
 df["language"] = df["language"].fillna("Unknown").astype(str).str.strip()
 df.loc[df["language"] == "", "language"] = "Unknown"
 
-# Log transforms
-df["log_commits"] = np.log1p(df["commits"])
-df["log_lines_added"] = np.log1p(df["lines_added"])
-df["log_lines_removed"] = np.log1p(df["lines_removed"])
-df["log_total_changes"] = np.log1p(df["total_changes"])
-
 # AI usage categories
 df["ai_group"] = pd.cut(
     df["ai_usage"],
@@ -67,8 +61,7 @@ print(df.describe())
 # Prepare analysis-ready data
 analysis_df = df[[
     "commit_author", "year", "month", "language",
-    "commits", "ai_usage", "ai_group", "used_ai", "total_changes",
-    "log_commits", "log_total_changes"
+    "commits", "ai_usage", "ai_group", "used_ai", "total_changes"
 ]]
 
 analysis_df.to_csv("processed/3_analysis_ready_data.csv", index=False)

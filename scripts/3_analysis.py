@@ -1,23 +1,26 @@
 import os
 import pandas as pd
-import numpy as np
 import statsmodels.formula.api as smf
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 
 from scripts.utils import (
     interpret_coef,
     save_show,
     paired_boxplot,
     paired_boxplot_with_means,
-    paired_regplot,
-    paired_lineplot_from_summary,
+    percent_axis_x,
+    percent_axis_y,
 )
 
 # -------------------------------
 # Setup
 # -------------------------------
 os.makedirs("plots", exist_ok=True)
+
+# Clean default style WITH gridlines
+sns.set_theme(style="whitegrid")
 
 # -------------------------------
 # Load data
@@ -37,8 +40,10 @@ print(df["used_ai"].value_counts())
 # -------------------------------
 # 1. Language summary
 # -------------------------------
+df_lang = df[df["language"] != "Unknown"]
+
 language_summary = (
-    df.groupby("language")
+    df_lang.groupby("language")
     .agg(
         n_months=("commit_author", "count"),
         mean_commits=("commits", "mean"),
@@ -126,72 +131,9 @@ print(f"Interpretation: A 10% increase in AI usage is associated with {interpret
 # 5. Plots
 # -------------------------------
 
-# 5.1 Productivity by AI usage group
-paired_boxplot(
-    data=df,
-    x="ai_group",
-    y1="log_commits",
-    y2="log_total_changes",
-    title1="Log Commits by AI Usage Group",
-    title2="Log Total Changes by AI Usage Group",
-    xlabel="AI Usage Group",
-    ylabel1="Log(Commits)",
-    ylabel2="Log(Total Changes)",
-    save_path="plots/productivity_by_ai_group.png",
-)
+# 5.1 Productivity by AI group with means
 
-# 5.2 Distribution of AI usage
-fig, ax = plt.subplots(figsize=(8, 4))
-sns.histplot(df["ai_usage"], bins=50, ax=ax)
-ax.set_title("Distribution of AI Usage")
-ax.set_xlabel("AI Usage")
-ax.set_ylabel("Count")
-save_show(fig, "plots/ai_usage_distribution.png")
-
-# 5.3 Productivity by AI adoption
-paired_boxplot(
-    data=df,
-    x="used_ai",
-    y1="log_commits",
-    y2="log_total_changes",
-    title1="Commits by AI Adoption",
-    title2="Total Changes by AI Adoption",
-    xlabel="Used AI (0 = No, 1 = Yes)",
-    ylabel1="Log(Commits)",
-    ylabel2="Log(Total Changes)",
-    save_path="plots/productivity_by_ai_adoption.png",
-)
-
-# 5.4 AI usage vs productivity
-paired_regplot(
-    data=ai_df,
-    x="ai_usage",
-    y1="log_commits",
-    y2="log_total_changes",
-    title1="AI Usage vs Commits",
-    title2="AI Usage vs Total Changes",
-    xlabel="AI Usage",
-    ylabel1="Log(Commits)",
-    ylabel2="Log(Total Changes)",
-    save_path="plots/ai_usage_vs_productivity.png",
-)
-
-# 5.5 Non-linear AI usage effect
-x_vals = np.linspace(ai_df["ai_usage"].min(), ai_df["ai_usage"].max(), 100)
-
-# 5.6 AI adoption over time
-time_trend = df.groupby(["year", "month"])["used_ai"].mean().reset_index()
-time_trend["date"] = time_trend["year"].astype(str) + "-" + time_trend["month"].astype(str)
-
-fig, ax = plt.subplots(figsize=(10, 4))
-sns.lineplot(data=time_trend, x="date", y="used_ai", ax=ax)
-ax.set_title("AI Adoption Over Time")
-ax.set_xlabel("Time")
-ax.set_ylabel("Proportion Using AI")
-plt.xticks(rotation=45)
-save_show(fig, "plots/ai_adoption_over_time.png")
-
-# 5.7 Productivity by AI group with means
+# log scale with means
 paired_boxplot_with_means(
     data=df,
     x="ai_group",
@@ -205,71 +147,202 @@ paired_boxplot_with_means(
     save_path="plots/productivity_by_ai_group_with_means.png",
 )
 
-# 5.9 AI group usage vs productivity
-bin_summary = (
-    ai_df.groupby("ai_group", observed=False)
-    .agg(
-        mean_log_commits=("log_commits", "mean"),
-        mean_log_total_changes=("log_total_changes", "mean"),
-    )
-    .reset_index()
+# 5.2 Distribution of AI usage
+fig, ax = plt.subplots(figsize=(8, 4))
+sns.histplot(df["ai_usage"], bins=50, ax=ax)
+ax.set_title("Distribution of AI Usage")
+ax.set_xlabel("AI Usage")
+ax.set_ylabel("Count")
+percent_axis_x(ax)
+save_show(fig, "plots/ai_usage_distribution.png")
+
+# Ai users only
+fig, ax = plt.subplots(figsize=(8, 4))
+data = df[df["used_ai"] == 1]["ai_usage"]
+sns.histplot(data, bins=50, ax=ax)
+ax.set_title("Distribution of AI Usage (Among AI Users)")
+ax.set_xlabel("AI Usage")
+ax.set_ylabel("Count")
+percent_axis_x(ax)
+save_show(fig, "plots/ai_usage_distribution_nonzero.png")
+
+# 5.3 Productivity by AI adoption
+
+# log scale
+paired_boxplot(
+    data=df,
+    x="used_ai",
+    y1="log_commits",
+    y2="log_total_changes",
+    title1="Commits by AI Adoption",
+    title2="Total Changes by AI Adoption",
+    xlabel="Used AI (0 = No, 1 = Yes)",
+    ylabel1="Log(Commits)",
+    ylabel2="Log(Total Changes)",
+    save_path="plots/productivity_by_ai_adoption.png",
 )
 
-paired_lineplot_from_summary(
-    x_vals=range(len(bin_summary)),
-    y1_vals=bin_summary["mean_log_commits"],
-    y2_vals=bin_summary["mean_log_total_changes"],
-    title1="Average Commits by AI Usage Bins",
-    title2="Average Total Changes by AI Usage Bins",
-    xlabel="AI Usage Bin Index",
-    ylabel1="Mean Log(Commits)",
-    ylabel2="Mean Log(Total Changes)",
-    save_path="plots/binned_ai_usage_productivity.png",
+# 5.4 AI adoption over time
+time_trend = df.groupby(["year", "month"])["used_ai"].mean().reset_index()
+time_trend["date"] = time_trend["year"].astype(str) + "-" + time_trend["month"].astype(str)
+
+fig, ax = plt.subplots(figsize=(10, 4))
+sns.lineplot(data=time_trend, x="date", y="used_ai", ax=ax)
+ax.set_title("AI Adoption Over Time")
+ax.set_xlabel("Time")
+ax.set_ylabel("Proportion Using AI")
+percent_axis_y(ax)
+plt.xticks(rotation=45)
+save_show(fig, "plots/ai_adoption_over_time.png")
+
+
+###################
+# LANGUAGE ANALYSIS
+###################
+
+# Top 10 languages by frequency
+top_langs = (
+    df_lang["language"]
+    .value_counts()
+    .head(10)
+    .index
 )
 
-# 5.10 Adoption effect with raw data points (single plot)
-fig, ax = plt.subplots(figsize=(8, 5))
-sns.boxplot(data=df, x="used_ai", y="log_total_changes", ax=ax)
-sns.stripplot(data=df, x="used_ai", y="log_total_changes", alpha=0.2, color="black", ax=ax)
-ax.set_title("Adoption Effect with Raw Data")
-ax.set_xlabel("Used AI (0 = No, 1 = Yes)")
-ax.set_ylabel("Log(Total Changes)")
-save_show(fig, "plots/adoption_with_points.png")
+df_lang_top = df_lang[df_lang["language"].isin(top_langs)]
 
-# 5.11 Top languages by AI adoption
-lang_plot = language_summary.sort_values("pct_ai_users", ascending=False).head(10)
-lang_plot_usage = language_summary.sort_values("mean_ai_usage", ascending=False).head(10)
+language_summary_top = language_summary[
+    language_summary["language"].isin(top_langs)
+]
 
-fig, ax = plt.subplots(figsize=(8, 5))
-sns.barplot(data=lang_plot, x="pct_ai_users", y="language", ax=ax)
-ax.set_title("Top Languages by AI Adoption Rate")
-ax.set_xlabel("Proportion of AI Usage")
-ax.set_ylabel("Language")
-save_show(fig, "plots/top_languages_by_ai_adoption.png")
-
-fig, ax = plt.subplots(figsize=(8, 5))
-sns.barplot(data=lang_plot_usage, x="mean_ai_usage", y="language", ax=ax)
-ax.set_title("Top Languages by Mean AI Usage Percentage")
+# 1. Mean AI usage by language
+fig, ax = plt.subplots(figsize=(8, 6))
+sns.barplot(
+    data=language_summary,
+    x="mean_ai_usage",
+    y="language",
+    ax=ax,
+    order=language_summary.sort_values("mean_ai_usage", ascending=False)["language"]
+)
+ax.set_title("Mean AI Usage Percentage by Language")
 ax.set_xlabel("Mean AI Usage Percentage")
 ax.set_ylabel("Language")
-save_show(fig, "plots/top_languages_by_mean_ai_usage.png")
+percent_axis_x(ax)
+save_show(fig, "plots/mean_ai_usage_by_language.png")
 
-# 5.12 All languages by AI adoption (appendix)
-fig, ax = plt.subplots(figsize=(8, 10))
-sns.barplot(data=language_summary, x="pct_ai_users", y="language", ax=ax)
-ax.set_title("AI Adoption Rate by Language")
-ax.set_xlabel("Proportion of AI Usage")
+# Mean AI Usage top language
+fig, ax = plt.subplots(figsize=(8, 6))
+sns.barplot(
+    data=language_summary_top,
+    x="mean_ai_usage",
+    y="language",
+    ax=ax,
+    order=language_summary_top.sort_values("mean_ai_usage", ascending=False)["language"]
+)
+ax.set_title("Mean AI Usage Percentage by Language (Top 10)")
+ax.set_xlabel("Mean AI Usage Percentage")
 ax.set_ylabel("Language")
-save_show(fig, "plots/all_languages_by_ai_adoption.png")
+percent_axis_x(ax)
+save_show(fig, "plots/top10_mean_ai_usage_by_language_top10.png")
 
-fig, ax = plt.subplots(figsize=(8, 10))
-sns.barplot(data=language_summary, x="mean_ai_usage", y="language", ax=ax)
-ax.set_title("Mean AI Usage percentage by Language")
-ax.set_xlabel("Mean AI Usage percentage")
+# 2. AI group distribution within each language
+lang_ai_dist = (
+    df_lang.groupby(["language", "ai_group"])
+    .size()
+    .reset_index(name="count")
+)
+
+lang_ai_dist["pct"] = lang_ai_dist.groupby("language")["count"].transform(lambda x: x / x.sum())
+
+pivot_df = lang_ai_dist.pivot(index="language", columns="ai_group", values="pct").fillna(0)
+pivot_df["ai_total"] = pivot_df.get("low", 0) + pivot_df.get("high", 0)
+pivot_df = pivot_df.sort_values("ai_total", ascending=False)
+
+fig, ax = plt.subplots(figsize=(8, 6))
+pivot_df.drop(columns="ai_total").plot(kind="barh", stacked=True, ax=ax)
+
+ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x:.0%}"))
+ax.set_title("AI Usage Distribution by Language")
+ax.set_xlabel("Proportion")
 ax.set_ylabel("Language")
-save_show(fig, "plots/all_languages_by_mean_ai_usage.png")
 
-# # 5️⃣ Optional summary table
-language_summary_sorted = language_summary.sort_values("mean_ai_usage", ascending=False)
-print("Top languages by mean AI usage:\n", language_summary_sorted.head(10))
+save_show(fig, "plots/ai_group_distribution_by_language.png")
 
+# AI group distribution within each language (top 10)
+lang_ai_dist = (
+    df_lang_top.groupby(["language", "ai_group"])
+    .size()
+    .reset_index(name="count")
+)
+
+lang_ai_dist["pct"] = lang_ai_dist.groupby("language")["count"].transform(lambda x: x / x.sum())
+
+pivot_df = lang_ai_dist.pivot(index="language", columns="ai_group", values="pct").fillna(0)
+pivot_df["ai_total"] = pivot_df.get("low", 0) + pivot_df.get("high", 0)
+pivot_df = pivot_df.sort_values("ai_total", ascending=False)
+
+fig, ax = plt.subplots(figsize=(8, 6))
+pivot_df.drop(columns="ai_total").plot(kind="barh", stacked=True, ax=ax)
+
+ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x:.0%}"))
+ax.set_title("AI Usage Distribution by Language (Top 10)")
+ax.set_xlabel("Proportion")
+ax.set_ylabel("Language")
+
+save_show(fig, "plots/ai_group_distribution_by_language_top10.png")
+
+# 3. Language distribution within each AI group
+group_lang_dist = (
+    df_lang.groupby(["ai_group", "language"])
+    .size()
+    .reset_index(name="count")
+)
+
+group_lang_dist["pct"] = group_lang_dist.groupby("ai_group")["count"].transform(lambda x: x / x.sum())
+
+g = sns.catplot(
+    data=group_lang_dist,
+    x="pct",
+    y="language",
+    col="ai_group",
+    kind="bar",
+    sharex=False,
+    height=5,
+    aspect=0.8
+)
+
+for ax in g.axes.flat:
+    ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x:.0%}"))
+    ax.set_xlabel("Proportion")
+    ax.set_ylabel("Language")
+
+g.fig.suptitle("Language Distribution Within Each AI Usage Group", y=1.02)
+
+plt.tight_layout()
+plt.savefig("plots/language_distribution_by_ai_group.png", dpi=300)
+plt.show()
+
+# top 10
+group_lang_dist_top = (
+    df_lang_top.groupby(["ai_group", "language"])
+    .size()
+    .reset_index(name="count")
+)
+group_lang_dist_top["pct"] = group_lang_dist_top.groupby("ai_group")["count"].transform(lambda x: x / x.sum())
+g = sns.catplot(
+    data=group_lang_dist_top,
+    x="pct",
+    y="language",
+    col="ai_group",
+    kind="bar",
+    sharex=False,
+    height=5,
+    aspect=0.8
+)
+for ax in g.axes.flat:
+    ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x:.0%}"))
+    ax.set_xlabel("Proportion")
+    ax.set_ylabel("Language")
+g.fig.suptitle("Language Distribution Within Each AI Usage Group (Top 10)", y=1.02)
+plt.tight_layout()
+plt.savefig("plots/language_distribution_by_ai_group_top10.png", dpi=300)
+plt.show()

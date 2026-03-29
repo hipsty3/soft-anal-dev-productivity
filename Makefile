@@ -13,6 +13,13 @@ aggregate:
 clean_data:
 	uv run python -m scripts.2_clean_data
 
+clean_data_100:
+	uv run python -m scripts.2_clean_data_100_dev
+
 analysis:
 	mkdir -p plots
 	uv run python -m scripts.3_analysis
+
+analysis_100:
+	mkdir -p plots_100_dev
+	uv run python -m scripts.3_analysis_100_dev

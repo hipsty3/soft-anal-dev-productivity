@@ -1,0 +1,73 @@
+import pandas as pd
+import numpy as np
+
+print("Step 2: Cleaning and preparing data for analysis...")
+
+df = pd.read_csv("processed/1_aggregated_data.csv")
+
+# Ensure numeric columns first
+numeric_columns = ["commits", "ai_commits", "lines_added", "lines_removed", "total_changes", "ai_usage"]
+df[numeric_columns] = df[numeric_columns].apply(pd.to_numeric, errors='coerce')
+
+# Remove missing critical values
+critical_columns = ["commit_author", "year", "month", "total_changes", "commits", "ai_usage", "ai_commits"]
+df = df.dropna(subset=critical_columns)
+
+# Remove empty authors
+df["commit_author"] = df["commit_author"].astype(str).str.strip()
+df = df[df["commit_author"] != ""]
+
+# Recalculate ai_usage to ensure consistency
+df["ai_usage"] = df["ai_commits"] / df["commits"]
+
+# Remove invalid rows
+df = df[df["total_changes"] > 0]
+df = df[df["commits"] > 0]
+df = df[(df["ai_usage"] >= 0) & (df["ai_usage"] <= 1)]
+
+# Remove negative values
+for col in numeric_columns:
+    df = df[df[col] >= 0]
+
+# Fix language
+df["language"] = df["language"].fillna("Unknown").astype(str).str.strip()
+df.loc[df["language"] == "", "language"] = "Unknown"
+
+# Filter out developers with less than 100 commits in total
+dev_commit_counts = df.groupby("commit_author")["commits"].sum()
+valid_devs = dev_commit_counts[dev_commit_counts >= 100].index
+df = df[df["commit_author"].isin(valid_devs)]
+
+# AI usage categories
+df["ai_group"] = pd.cut(
+    df["ai_usage"],
+    bins=[-0.001, 0, 0.2, 1],
+    labels=["none", "low", "high"],
+    include_lowest=True  # <- include 0 in first bin
+)
+
+# AI usage flag
+df["used_ai"] = (df["ai_usage"] > 0).astype(int)
+
+print(f"AI Group value count: {df['ai_group'].value_counts()}")
+print(f"Used AI value count: {df['used_ai'].value_counts()}")
+
+
+# Save
+df.to_csv("processed/2_cleaned_data_100_dev.csv", index=False)
+
+print("----------------------------------------\n")
+print("Final rows:", len(df))
+print(df.describe())
+
+# Prepare analysis-ready data
+analysis_df = df[[
+    "commit_author", "year", "month", "language",
+    "commits", "ai_usage", "ai_group", "used_ai", "total_changes"
+]]
+
+analysis_df.to_csv("processed/3_analysis_ready_data_100_dev.csv", index=False)
+
+print("----------------------------------------")
+print("Analysis final rows:", len(analysis_df))
+print(analysis_df.describe())

@@ -1,10 +1,12 @@
 # README
-This repository provides the data mining and data processing code and resources for a software analytics research project on the effect of AI usage on Developer Productivity. This project is part of an assessment for a Masters in Computing Science degree subject on Software Analytics in Rijkuniversiteit Gronigen.
+This repository provides a replication package for data mining and data processing code and resources for a software analytics research project on the effect of AI usage on Developer Productivity. This project is part of an assessment for a Masters in Computing Science degree subject on Software Analytics in Rijkuniversiteit Gronigen.
+
+The final report is written in `report.pdf` and is also uploaded as a medium article: https://medium.com/@r.amalia/the-effect-of-ai-usage-on-developer-productivity-823bd2b56fe8. 
 
 ## Requirements
 1. Python version >=3.14
 2. This project uses `uv` for python dependency management. Dependencies for data processing listed in `pyproject.toml`.
-3. (Optional) a DB explorer to explore the dataset (`ai_commit_research_8.zip`). We use DB Browser for SQLite
+3. (Optional) a DB explorer to explore the dataset (`ai_commit_research_8.zip`). We use DB Browser for SQLite.
 
 ### Install uv
 1. Follow instructions to install `uv` from https://github.com/astral-sh/uv

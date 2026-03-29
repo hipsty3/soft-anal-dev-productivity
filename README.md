@@ -7,6 +7,13 @@ We defined developer productivity with two metrics:
 1. **Commit Frequency:** number of commits by a developer per month.
 2. **Commit Volume:** total number of lines added and deleted in a commit by a developer within a month.
 
+## Data mining script
+Data mining script can be found in `scripts > aimining.py`. The dataset mined must fulfill these requirements:
+- Must be open-sourced projects
+- Repository must be popular (minimum 100 Pull requests)
+- Commit data must be mined starting from 1 January 2025, which we believe AI adoption has started
+- Developers of the commits must be active contributors (minimum made 100 commits)
+
 ## Dataset
 
 **Rows:** represent a single commit by a developer, with relevant information for processing as columns.

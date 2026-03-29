@@ -231,6 +231,9 @@ plt.tight_layout()
 plt.savefig("plots/top10_languages_by_developers.png", dpi=300, bbox_inches="tight")
 plt.show()
 
+print("\nTop 10 languages by number of developers:")
+print(top_langs[["language", "n_developers"]])
+
 
 # 5. Mean AI usage by top 10 languages
 fig, ax = plt.subplots(figsize=(8, 6))
@@ -249,3 +252,6 @@ ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x:.0%}"))
 plt.tight_layout()
 plt.savefig("plots/top10_languages_mean_ai_usage.png", dpi=300, bbox_inches="tight")
 plt.show()
+
+print("\nMean AI usage by top 10 languages:")
+print(top_langs[["language", "mean_ai_usage"]])

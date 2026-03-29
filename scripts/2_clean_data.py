@@ -47,11 +47,6 @@ df["used_ai"] = (df["ai_usage"] > 0).astype(int)
 print(f"AI Group value count: {df['ai_group'].value_counts()}")
 print(f"Used AI value count: {df['used_ai'].value_counts()}")
 
-df["dev_month_id"] = (
-    df["commit_author"] + "_" +
-    df["year"].astype(str) + "_" +
-    df["month"].astype(str)
-)
 
 # Save
 df.to_csv("processed/2_cleaned_data.csv", index=False)

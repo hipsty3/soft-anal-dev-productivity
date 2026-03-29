@@ -4,6 +4,7 @@ from scipy.stats import kruskal, mannwhitneyu
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
+import numpy as np
 
 print("Step 3: Analyzing data and generating plots...")
 
@@ -238,20 +239,23 @@ print(top_langs[["language", "n_developers"]])
 # 5. Mean AI usage by top 10 languages
 fig, ax = plt.subplots(figsize=(8, 6))
 
+top_langs["mean_ai_usage_pct"] = top_langs["mean_ai_usage"] * 100
+
 sns.barplot(
-    data=top_langs.sort_values("mean_ai_usage", ascending=False),
-    x="mean_ai_usage",
+    data=top_langs.sort_values("mean_ai_usage_pct", ascending=False),
+    x="mean_ai_usage_pct",
     y="language",
     ax=ax
 )
 ax.set_title("Mean AI Usage by Top 10 Languages")
-ax.set_xlabel("Mean AI Usage")
+ax.set_xlabel("Mean AI Usage (%)")
 ax.set_ylabel("Language")
-ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x:.0%}"))
+ax.set_xticks(np.linspace(0, 4, 5))  # Set x-ticks at 0%, 1%, ..., 5%
+ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{x:.0f}%"))
 
 plt.tight_layout()
 plt.savefig("plots/top10_languages_mean_ai_usage.png", dpi=300, bbox_inches="tight")
 plt.show()
 
 print("\nMean AI usage by top 10 languages:")
-print(top_langs[["language", "mean_ai_usage"]])
+print(top_langs[["language", "mean_ai_usage_pct"]])

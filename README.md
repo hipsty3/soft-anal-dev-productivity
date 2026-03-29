@@ -13,6 +13,7 @@ Data mining script can be found in `scripts > aimining.py`. The dataset mined mu
 - Repository must be popular (minimum 100 Pull requests)
 - Commit data must be mined starting from 1 January 2025, which we believe AI adoption has started
 - Developers of the commits must be active contributors (minimum made 100 commits)
+We have provided the final dateset obtained from the mining script as a zip file, `ai_commit_research_8.zip` for convenience as the overall mining process takes a very long time.
 
 ## Dataset
 
